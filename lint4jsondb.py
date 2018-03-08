@@ -37,13 +37,14 @@ class Invocation:
 
 
 class GccCompatibleVisitor(BaseVisitor):
-    COMMAND_PREFIXES = ['clang', 'gcc', 'g++']
+    COMMAND_PREFIXES = ['clang', 'clang++', 'gcc', 'cc', 'g++', 'c++', 'cpp']
 
     def __init__(self):
         super().__init__()
 
     def matches(self, command):
-        return any(command.startswith(cmd) for cmd in self.COMMAND_PREFIXES)
+        _, executable = os.path.split(command)
+        return any(cmd in command for cmd in self.COMMAND_PREFIXES)
 
     def derive_invocation_from(self, param):
         # refer to: https://gcc.gnu.org/onlinedocs/gcc/Preprocessor-Options.html#Preprocessor-Options
