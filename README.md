@@ -14,7 +14,25 @@ To check existing codebases with _PC-lint (plus)_ one has to:
 In order to integrate with existing build chains this tool can be used to execute _PC-lint_ using the build job's _JSON compilation database_.
 
 ## Usage
-FIXME
+Invoke `lint4jsondb.py` 
+
+```
+W:\> lint4jsondb.py --compilation-db commands.json --lint-path D:\pclp --lint-binary pclp64.exe -- std.lnt
+```
+
+where 
+
+- `--compilation-db` points to your build system's JSON compilation database
+- `--lint-path` points to you PC-lint root path (that contains the binaries and the `lnt` directory)
+- `--lint-binary` names the PC-lint binary you want to execute (either `pclp32`, `pclp64` or `lint-nt`)
+
+
+## Further notes
+- might work with _FlexeLint_ as well (I don't have one to test with)
+
+
+## Prerequisites
+- Python >= 2.7
 
 
 ## JSON compilation database
