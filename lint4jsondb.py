@@ -103,6 +103,8 @@ class JsonDbEntry:
         self._tokens = tokenize_command(self.command)
 
         for p in TOKEN_VISITORS:
+            assert len(self._tokens) > 0, "Need to have at least one token"
+
             if p.matches(self._tokens[0]):
                 p.start_invocation()
 
