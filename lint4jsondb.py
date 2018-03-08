@@ -199,5 +199,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     db = Lint4JsonCompilationDb(args.compilation_db)
-    print(db)
 
+    for item in db.items:
+        print(item)
