@@ -86,7 +86,10 @@ class JsonDbEntry:
         self.directory = None
         self.command = None
         self.file = None
+        self.arguments = []
+
         self._tokens = []
+
         self.invocation = None
 
     def __repr__(self):
@@ -95,12 +98,24 @@ class JsonDbEntry:
 
     def store(self, name, value):
         try:
-            setattr(self, name, value)
+            if value is None:
+                return
+
+            a = getattr(self, name)
+            if isinstance(a, list):
+                a.append(value)
+            else:
+                a = value
+            setattr(self, name, a)
         except AttributeError:
             pass  # just eat any unsupported name
 
     def finish(self):
-        self._tokens = tokenize_command(self.command)
+        if self.command:
+            self._tokens = tokenize_command(self.command)
+
+        if len(self.arguments) > 0:
+            self._tokens = self.arguments
 
         for p in TOKEN_VISITORS:
             assert len(self._tokens) > 0, "Need to have at least one token"
