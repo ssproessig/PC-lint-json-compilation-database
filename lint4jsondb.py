@@ -2,6 +2,48 @@ import ijson
 import sys
 
 
+class Invocation:
+    def __init__(self):
+        self.includes = []
+        self.defines = []
+
+
+class GccCompatibleVisitor:
+    COMMAND_PREFIXES = ['clang', 'gcc', 'g++']
+
+    def __init__(self):
+        self._invocation = None
+        self._store_next_param_in = None
+
+    def matches(self, command):
+        return any(command.startswith(cmd) for cmd in self.COMMAND_PREFIXES)
+
+    def start_invocation(self):
+        self._invocation = Invocation()
+
+    def derive_invocation_from(self, param):
+        if self._store_next_param_in is not None:
+            self._store_next_param_in.append(param)
+            self._store_next_param_in = None
+        # refer to: https://gcc.gnu.org/onlinedocs/gcc/Preprocessor-Options.html#Preprocessor-Options
+        #   TODO: support -U
+        elif param in ["-D"]:
+            self._store_next_param_in = self._invocation.defines
+        # refer to: https://gcc.gnu.org/onlinedocs/gcc/Directory-Options.html
+        #   TODO: support -iquote, -idirafter, -isysroot,
+        #   TODO: support -iprefix, -iwithprefix*
+        elif param in ["-I", "-isystem"]:
+            self._store_next_param_in = self._invocation.includes
+
+    def end_invocation(self):
+        return self._invocation
+
+
+TOKEN_VISITORS = [
+    GccCompatibleVisitor()
+]
+
+
 def tokenize_command(command):
     tokens = []
 
@@ -37,6 +79,15 @@ class JsonDbEntry:
 
     def finish(self):
         self._tokens = tokenize_command(self.command)
+
+        for p in TOKEN_VISITORS:
+            if p.matches(self._tokens[0]):
+                p.start_invocation()
+
+                for token in self._tokens[1:]:
+                    p.derive_invocation_from(token)
+
+                self.invocation = p.end_invocation()
 
 
 class Lint4JsonCompilationDb:
