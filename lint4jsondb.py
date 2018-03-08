@@ -27,6 +27,12 @@ class Invocation:
         self.includes = []
         self.defines = []
 
+    def __repr__(self):
+        includes = "\t".join(self.includes)
+        defines = "\t".join(self.defines)
+
+        return "    includes: %s,\n    defines:  %s" % (includes, defines)
+
 
 class GccCompatibleVisitor(BaseVisitor):
     COMMAND_PREFIXES = ['clang', 'gcc', 'g++']
@@ -82,6 +88,10 @@ class JsonDbEntry:
         self.file = None
         self._tokens = []
         self.invocation = None
+
+    def __repr__(self):
+        return "%s:\n    in        %s\n%s" % (
+            self.file, self.directory, self.invocation)
 
     def store(self, name, value):
         try:
