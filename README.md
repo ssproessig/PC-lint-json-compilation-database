@@ -33,6 +33,7 @@ where
 
 ## Prerequisites
 - Python >= 2.7
+- Package `ijson` (for parsing JSON compilation databases on the fly)
 
 
 ## JSON compilation database
