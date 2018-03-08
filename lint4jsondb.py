@@ -51,11 +51,15 @@ class GccCompatibleVisitor(BaseVisitor):
         #   TODO: support -U
         if param in ["-D"]:
             self._store_next_param_in = self._invocation.defines
+        elif param.startswith('-D'):
+            self._invocation.defines.append(param[2:])
         # refer to: https://gcc.gnu.org/onlinedocs/gcc/Directory-Options.html
         #   TODO: support -iquote, -idirafter, -isysroot,
         #   TODO: support -iprefix, -iwithprefix*
         elif param in ["-I", "-isystem"]:
             self._store_next_param_in = self._invocation.includes
+        elif param.startswith('-I'):
+            self._invocation.includes.append(param[2:])
         else:
             super().derive_invocation_from(param)
 
