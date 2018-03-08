@@ -1,5 +1,7 @@
+import json
+import os
+
 import ijson
-import sys
 
 
 class BaseVisitor:
@@ -57,8 +59,30 @@ class GccCompatibleVisitor(BaseVisitor):
             super().derive_invocation_from(param)
 
 
+class MSVCCompatibleVisitor(BaseVisitor):
+    COMPILER = ["cl.exe"]
+
+    def __init__(self):
+        super().__init__()
+
+    def matches(self, command):
+        _, executable = os.path.split(command)
+        return executable in self.COMPILER
+
+    def derive_invocation_from(self, param):
+        if param.startswith('/I'):
+            self._store_next_param_in = self._invocation.includes
+        elif param.startswith('/D'):
+            self._store_next_param_in = self._invocation.defines
+
+        if self._store_next_param_in is not None:
+            self._store_next_param_in.append(param[2:])
+            self._store_next_param_in = None
+
+
 TOKEN_VISITORS = [
     GccCompatibleVisitor()
+    , MSVCCompatibleVisitor()
 ]
 
 
@@ -127,6 +151,8 @@ class JsonDbEntry:
                     p.derive_invocation_from(token)
 
                 self.invocation = p.end_invocation()
+
+                continue
 
 
 class Lint4JsonCompilationDb:
