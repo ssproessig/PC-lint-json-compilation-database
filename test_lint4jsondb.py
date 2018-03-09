@@ -175,6 +175,7 @@ class LintExecutorUnitTest(unittest.TestCase):
 
         item_to_process = JsonDbEntry()
         item_to_process.file = "<file>"
+        item_to_process.directory = "<directory>"
         item_to_process.invocation = Invocation()
         item_to_process.invocation.defines = ["d1", "d2"]
         item_to_process.invocation.includes = ["i1", "i2"]
@@ -183,6 +184,9 @@ class LintExecutorUnitTest(unittest.TestCase):
 
         self.assertEqual(mock_call.call_count, 1)
         args = mock_call.call_args[0][0]
+
+        # ensure lint is executed in the build directory
+        self.assertDictEqual(mock_call.call_args[1], {'cwd': '<directory>'})
 
         # ensure lint is called
         self.assertEqual(args[0], os.path.join("<lint-path>", "<lint-exe>"))

@@ -209,7 +209,7 @@ class LintExecutor:
         arguments.extend('-i"%s"' % i for i in inv.includes)
         arguments.append(item_to_process.file)
 
-        subprocess.call(arguments)
+        subprocess.call(arguments, cwd=item_to_process.directory)
 
 
 if __name__ == '__main__':
