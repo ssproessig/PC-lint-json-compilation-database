@@ -39,7 +39,7 @@ class GccCompatibleVisitor(BaseVisitor):
     COMMAND_PREFIXES = ['clang', 'clang++', 'gcc', 'cc', 'g++', 'c++', 'cpp']
 
     def __init__(self):
-        super().__init__()
+        BaseVisitor.__init__(self)
 
     def matches(self, command):
         _, executable = os.path.split(command)
@@ -60,14 +60,14 @@ class GccCompatibleVisitor(BaseVisitor):
         elif param.startswith('-I'):
             self._invocation.includes.append(param[2:])
         else:
-            super().derive_invocation_from(param)
+            BaseVisitor.derive_invocation_from(self, param)
 
 
 class MSVCCompatibleVisitor(BaseVisitor):
     COMPILER = ["cl.exe"]
 
     def __init__(self):
-        super().__init__()
+        BaseVisitor.__init__(self)
 
     def matches(self, command):
         _, executable = os.path.split(command)
