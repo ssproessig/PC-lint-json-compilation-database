@@ -1,4 +1,3 @@
-import json
 import os
 
 import ijson
@@ -186,7 +185,7 @@ class Lint4JsonCompilationDb:
         self.items.append(self._current_item)
         self._current_item = None
 
-    def forward(self, prefix, event, value):
+    def forward(self, prefix, _, value):
         parts = prefix.split('.')
 
         if len(parts) > 1:
