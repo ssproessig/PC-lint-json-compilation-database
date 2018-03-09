@@ -204,7 +204,7 @@ class LintExecutor:
     def execute(self, item_to_process):
         inv = item_to_process.invocation
 
-        arguments = self.args
+        arguments = self.args[:]
         arguments.extend('-d' + d for d in inv.defines)
         arguments.extend('-i"%s"' % i for i in inv.includes)
         arguments.append(item_to_process.file)
