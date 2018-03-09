@@ -199,6 +199,7 @@ if __name__ == '__main__':
     parser.add_argument('--compilation-db', type=str, required=True)
     parser.add_argument('--lint-path', type=str, required=True)
     parser.add_argument('--lint-binary', type=str, required=True)
+    parser.add_argument('args', nargs='*')
 
     args = parser.parse_args()
 
