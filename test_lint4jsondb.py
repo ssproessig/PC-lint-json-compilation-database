@@ -37,7 +37,7 @@ class Lint4JsonCompilationDbUnitTest(unittest.TestCase):
         self.assertIn("defines:  d1\td2", as_string)
 
     def test_01_json_db_does_not_exist(self):
-        with self.assertRaises(FileNotFoundError) as cm:
+        with self.assertRaises(Exception) as cm:
             Lint4JsonCompilationDb('unknown.json')
 
         self.assertIn("unknown.json", str(cm.exception))
