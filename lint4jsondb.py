@@ -46,7 +46,7 @@ class GccCompatibleVisitor(BaseVisitor):
         return any(cmd in command for cmd in self.COMMAND_PREFIXES)
 
     def derive_invocation_from(self, param):
-        # refer to: https://gcc.gnu.org/onlinedocs/gcc/Preprocessor-Options.html#Preprocessor-Options
+        # refer to: http://bit.ly/2GbmHfo
         #   TODO: support -U
         if param in ["-D"]:
             self._store_next_param_in = self._invocation.defines
