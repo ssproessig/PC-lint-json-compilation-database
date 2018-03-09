@@ -3,6 +3,7 @@ import tempfile
 import unittest
 
 import ijson
+import mock
 
 from lint4jsondb import Lint4JsonCompilationDb, JsonDbEntry, Invocation, \
     BaseVisitor

@@ -34,6 +34,7 @@ where
 ## Prerequisites
 - Python >= 2.7
 - Package `ijson` (for parsing JSON compilation databases on the fly)
+- Package `mock` (mocking calls, since Python 3.3 shipped with it)
 
 
 ## JSON compilation database
