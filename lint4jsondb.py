@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 import ijson
 
@@ -192,6 +193,25 @@ class Lint4JsonCompilationDb:
             self._current_item.store(parts[1], value)
 
 
+class LintExecutor:
+    def __init__(self, lint_path, lint_binary, other_args):
+        self.args = [
+            os.path.join(lint_path, lint_binary),
+            '-i"%s/lnt"' % lint_path
+        ]
+        self.args.extend(other_args)
+
+    def execute(self, item_to_process):
+        inv = item_to_process.invocation
+
+        arguments = self.args
+        arguments.extend('-d' + d for d in inv.defines)
+        arguments.extend('-i"%s"' % i for i in inv.includes)
+        arguments.append(item_to_process.file)
+
+        subprocess.call(arguments)
+
+
 if __name__ == '__main__':
     import argparse
 
@@ -205,5 +225,7 @@ if __name__ == '__main__':
 
     db = Lint4JsonCompilationDb(args.compilation_db)
 
+    lint = LintExecutor(args.lint_path, args.lint_binary, args.args)
+
     for item in db.items:
-        print(item)
+        lint.execute(item)

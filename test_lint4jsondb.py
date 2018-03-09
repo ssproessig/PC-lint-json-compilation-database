@@ -5,8 +5,9 @@ import unittest
 import ijson
 import mock
 
-from lint4jsondb import Lint4JsonCompilationDb, JsonDbEntry, Invocation, \
-    BaseVisitor
+from lint4jsondb import \
+    Lint4JsonCompilationDb, LintExecutor, \
+    JsonDbEntry, Invocation, BaseVisitor
 
 
 class Lint4JsonCompilationDbUnitTest(unittest.TestCase):
@@ -164,3 +165,37 @@ class Lint4JsonCompilationDbUnitTest(unittest.TestCase):
             b.matches("")
 
         self.assertIn("BaseVisitor can not match", str(cm.exception))
+
+
+class LintExecutorUnitTest(unittest.TestCase):
+
+    @mock.patch('subprocess.call')
+    def test_invocation(self, mock_call):
+        lint = LintExecutor("<lint-path>", "<lint-exe>", ["o1", "o2"])
+
+        item_to_process = JsonDbEntry()
+        item_to_process.file = "<file>"
+        item_to_process.invocation = Invocation()
+        item_to_process.invocation.defines = ["d1", "d2"]
+        item_to_process.invocation.includes = ["i1", "i2"]
+
+        lint.execute(item_to_process)
+
+        self.assertEqual(mock_call.call_count, 1)
+        args = mock_call.call_args[0][0]
+
+        # ensure lint is called
+        self.assertEqual(args[0], os.path.join("<lint-path>", "<lint-exe>"))
+        # ensure lint's "lnt" directory was added
+        self.assertEqual(args[1], '-i"<lint-path>/lnt"')
+        # ensure all other options are passed as-is
+        self.assertEqual(args[2], "o1")
+        self.assertEqual(args[3], "o2")
+        # ensure defines are passed as defines
+        self.assertEqual(args[4], "-dd1")
+        self.assertEqual(args[5], "-dd2")
+        # ensure include paths a re passed quoted
+        self.assertEqual(args[6], '-i"i1"')
+        self.assertEqual(args[7], '-i"i2"')
+        # ensure that the file to check is passed finally
+        self.assertEqual(args[8], "<file>")
