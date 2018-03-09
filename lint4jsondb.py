@@ -9,7 +9,7 @@ class BaseVisitor:
         self._store_next_param_in = None
 
     def matches(self, command):
-        return False
+        raise NotImplementedError("BaseVisitor can not match")
 
     def start_invocation(self):
         self._invocation = Invocation()

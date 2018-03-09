@@ -155,3 +155,11 @@ class Lint4JsonCompilationDbUnitTest(unittest.TestCase):
         self.assertListEqual(invocation.includes,
                              [r'C:\Qt\5.11.0\msvc2017_64\include',
                               r'C:\Qt\5.11.0\msvc2017_64\include\QtCore'])
+
+    def test_04_ensure_BaseVisitor_never_matches(self):
+        b = BaseVisitor()
+
+        with self.assertRaises(NotImplementedError) as cm:
+            b.matches("")
+
+        self.assertIn("BaseVisitor can not match", str(cm.exception))
