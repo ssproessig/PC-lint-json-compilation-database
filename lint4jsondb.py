@@ -209,6 +209,9 @@ class LintExecutor:
         arguments.extend('-i"%s"' % i for i in inv.includes)
         arguments.append(item_to_process.file)
 
+        if not os.path.exists(item_to_process.directory):
+            os.makedirs(item_to_process.directory)
+
         subprocess.call(arguments, cwd=item_to_process.directory)
 
 

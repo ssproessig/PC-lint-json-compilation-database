@@ -169,8 +169,12 @@ class Lint4JsonCompilationDbUnitTest(unittest.TestCase):
 
 class LintExecutorUnitTest(unittest.TestCase):
 
+    @mock.patch('os.path.exists')
+    @mock.patch('os.makedirs')
     @mock.patch('subprocess.call')
-    def test_invocation(self, mock_call):
+    def test_invocation(self, mock_call, mock_os_path_exists, mock_os_makedirs):
+        mock_os_path_exists.return_value = False
+
         lint = LintExecutor("<lint-path>", "<lint-exe>", ["o1", "o2"])
 
         item_to_process = JsonDbEntry()
@@ -181,6 +185,9 @@ class LintExecutorUnitTest(unittest.TestCase):
         item_to_process.invocation.includes = ["i1", "i2"]
 
         lint.execute(item_to_process)
+
+        self.assertEqual(mock_os_makedirs.call_count, 1)
+        self.assertEqual(mock_os_makedirs.call_args[0][0], "<directory>")
 
         self.assertEqual(mock_call.call_count, 1)
         args = mock_call.call_args[0][0]
