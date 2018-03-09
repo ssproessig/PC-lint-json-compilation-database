@@ -85,8 +85,8 @@ class MSVCCompatibleVisitor(BaseVisitor):
 
 
 TOKEN_VISITORS = [
-    GccCompatibleVisitor()
-    , MSVCCompatibleVisitor()
+    GccCompatibleVisitor(),
+    MSVCCompatibleVisitor()
 ]
 
 
