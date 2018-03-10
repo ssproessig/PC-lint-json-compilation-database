@@ -197,6 +197,7 @@ class LintExecutor:
     def __init__(self, lint_path, lint_binary, other_args):
         self.args = [
             os.path.join(lint_path, lint_binary),
+            '-b',
             '-i"%s/lnt"' % lint_path
         ]
         self.args.extend(other_args)

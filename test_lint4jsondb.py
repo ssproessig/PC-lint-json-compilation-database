@@ -197,6 +197,8 @@ class LintExecutorUnitTest(unittest.TestCase):
 
         # ensure lint is called
         self.assertEqual(args.pop(0), os.path.join("<lint-path>", "<lint-exe>"))
+        # ensure lint suppresses the banner line
+        self.assertEqual(args.pop(0), '-b')
         # ensure lint's "lnt" directory was added
         self.assertEqual(args.pop(0), '-i"<lint-path>/lnt"')
         # ensure all other options are passed as-is
