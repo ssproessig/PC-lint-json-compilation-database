@@ -196,17 +196,17 @@ class LintExecutorUnitTest(unittest.TestCase):
         self.assertDictEqual(mock_call.call_args[1], {'cwd': '<directory>'})
 
         # ensure lint is called
-        self.assertEqual(args[0], os.path.join("<lint-path>", "<lint-exe>"))
+        self.assertEqual(args.pop(0), os.path.join("<lint-path>", "<lint-exe>"))
         # ensure lint's "lnt" directory was added
-        self.assertEqual(args[1], '-i"<lint-path>/lnt"')
+        self.assertEqual(args.pop(0), '-i"<lint-path>/lnt"')
         # ensure all other options are passed as-is
-        self.assertEqual(args[2], "o1")
-        self.assertEqual(args[3], "o2")
+        self.assertEqual(args.pop(0), "o1")
+        self.assertEqual(args.pop(0), "o2")
         # ensure defines are passed as defines
-        self.assertEqual(args[4], "-dd1")
-        self.assertEqual(args[5], "-dd2")
+        self.assertEqual(args.pop(0), "-dd1")
+        self.assertEqual(args.pop(0), "-dd2")
         # ensure include paths a re passed quoted
-        self.assertEqual(args[6], '-i"i1"')
-        self.assertEqual(args[7], '-i"i2"')
+        self.assertEqual(args.pop(0), '-i"i1"')
+        self.assertEqual(args.pop(0), '-i"i2"')
         # ensure that the file to check is passed finally
-        self.assertEqual(args[8], "<file>")
+        self.assertEqual(args.pop(0), "<file>")
