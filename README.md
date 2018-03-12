@@ -28,6 +28,11 @@ where
 - `--jobs` is the number of parallel PC-lint jobs to spawn (defaults to _number of CPU core_)
 - `--` and everything after it will be passed to the PC-lint binary; use it to point to your `std.lnt`
 
+Optionally you can control which files of the overall JSON compilation database SHALL be processed using
+
+- `--include-only <regexp>` will include only those files whose full file-path matches `<regexp>`
+- `--exclude-all <regexp>` will additionally exclude all those files whose full file-path matches `<regexp>`
+
 
 ## Further notes
 - might work with _FlexeLint_ as well (I don't have one to test with)

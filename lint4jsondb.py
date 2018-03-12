@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import re
 import subprocess
 import sys
 
@@ -168,11 +169,19 @@ class JsonDbEntry:
 
 
 class Lint4JsonCompilationDb:
-    def __init__(self, compilation_db):
+    def __init__(self, compilation_db, include_only=set(), exclude_all=set()):
         self._current_item = None
         self.items = []
 
         self.read_json_db(compilation_db)
+
+        for regexp in include_only:
+            r = re.compile(regexp)
+            self.items[:] = [i for i in self.items if r.match(i.file)]
+
+        for regexp in exclude_all:
+            r = re.compile(regexp)
+            self.items[:] = [i for i in self.items if not r.match(i.file)]
 
     def read_json_db(self, fn):
         with open(fn, 'r') as f:
@@ -268,11 +277,14 @@ if __name__ == '__main__':
     parser.add_argument('--lint-path', type=str, required=True)
     parser.add_argument('--lint-binary', type=str, required=True)
     parser.add_argument('--jobs', type=int, default=cpu_count())
+    parser.add_argument('--include-only', action='append', default=[])
+    parser.add_argument('--exclude-all', action='append', default=[])
     parser.add_argument('args', nargs='*')
 
     args = parser.parse_args()
 
-    db = Lint4JsonCompilationDb(args.compilation_db)
+    db = Lint4JsonCompilationDb(args.compilation_db,
+                                args.include_only, args.exclude_all)
 
     lint = LintExecutor(args.lint_path, args.lint_binary, args.args)
 

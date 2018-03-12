@@ -166,6 +166,42 @@ class Lint4JsonCompilationDbUnitTest(unittest.TestCase):
 
         self.assertIn("BaseVisitor can not match", str(cm.exception))
 
+    def __setup_filter_json(self):
+        self.__create_temp_json(
+            b'['
+            b' {"directory":"<dir>", "command": "cl.exe", "file":"all.cpp"},'
+            b' {"directory":"<dir>", "command": "cl.exe", "file":"a2.cpp"},'
+            b' {"directory":"<dir>", "command": "cl.exe", "file":"ball.cpp"},'
+            b' {"directory":"<dir>", "command": "cl.exe", "file":"b2.cpp"}'
+            b']'
+        )
+
+    def test_05a_include_only(self):
+        self.__setup_filter_json()
+        db = Lint4JsonCompilationDb(self._json_tested, ['a.*\.cpp'])
+
+        self.assertEqual(len(db.items), 2)
+        self.assertEqual(db.items[0].file, "all.cpp")
+        self.assertEqual(db.items[1].file, "a2.cpp")
+
+    def test_05b_exclude_all(self):
+        self.__setup_filter_json()
+        db = Lint4JsonCompilationDb(self._json_tested, [], ['a.*\.cpp'])
+
+        self.assertEqual(len(db.items), 2)
+        self.assertEqual(db.items[0].file, "ball.cpp")
+        self.assertEqual(db.items[1].file, "b2.cpp")
+
+    def test_05c_mix_include_and_exclude(self):
+        self.__setup_filter_json()
+        db = Lint4JsonCompilationDb(self._json_tested,
+                                    ['.*\.cpp'],
+                                    ['.*all.*'])
+
+        self.assertEqual(len(db.items), 2)
+        self.assertEqual(db.items[0].file, "a2.cpp")
+        self.assertEqual(db.items[1].file, "b2.cpp")
+
 
 class LintExecutorUnitTest(unittest.TestCase):
 
