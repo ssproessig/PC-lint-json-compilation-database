@@ -276,5 +276,8 @@ if __name__ == '__main__':
     lint = LintExecutor(args.lint_path, args.lint_binary, args.args)
 
     pool = ThreadPool(args.jobs)
-    pool.map(lambda item: lint.execute(item), db.items)
-    pool.wait_completion()
+    try:
+        pool.map(lambda item: lint.execute(item), db.items)
+        pool.wait_completion()
+    except KeyboardInterrupt:
+        pass
