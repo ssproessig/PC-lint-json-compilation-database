@@ -207,7 +207,7 @@ class LintExecutorUnitTest(unittest.TestCase):
 
     @mock.patch('os.path.exists')
     @mock.patch('os.makedirs')
-    @mock.patch('subprocess.call')
+    @mock.patch('subprocess.Popen')
     def test_invocation(self, mock_call, mock_os_path_exists, mock_os_makedirs):
         mock_os_path_exists.return_value = False
 
@@ -229,7 +229,9 @@ class LintExecutorUnitTest(unittest.TestCase):
         args = mock_call.call_args[0][0]
 
         # ensure lint is executed in the build directory
-        self.assertDictEqual(mock_call.call_args[1], {'cwd': '<directory>'})
+        self.assertDictEqual(mock_call.call_args[1],
+                             {'cwd': '<directory>',
+                              'stderr': -2, 'stdout': -1})
 
         # ensure lint is called
         self.assertEqual(args.pop(0), os.path.join("<lint-path>", "<lint-exe>"))

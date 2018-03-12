@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 from multiprocessing import cpu_count
-from threading import Thread
+from threading import Lock, Thread
 from queue import Queue     # works for Python 2 and 3 if "future" is installed
 
 import ijson
@@ -229,7 +229,13 @@ class LintExecutor:
         if not os.path.exists(item_to_process.directory):
             os.makedirs(item_to_process.directory)
 
-        subprocess.call(arguments, cwd=item_to_process.directory)
+        proc = subprocess.Popen(
+            arguments, cwd=item_to_process.directory,
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        stdout = proc.communicate()[0].decode()
+
+        with Lock():
+            print(stdout)
 
 
 # using multiprocessing.dummy.ThreadPool does not allow to Ctrl+C running lint
