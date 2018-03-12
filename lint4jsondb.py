@@ -82,9 +82,9 @@ class MSVCCompatibleVisitor(BaseVisitor):
         return executable in self.COMPILER
 
     def derive_invocation_from(self, param):
-        if param.startswith('/I'):
+        if param.startswith('/I') or param.startswith('-I'):
             self._store_next_param_in = self._invocation.includes
-        elif param.startswith('/D'):
+        elif param.startswith('/D') or param.startswith('-D'):
             self._store_next_param_in = self._invocation.defines
 
         if self._store_next_param_in is not None:

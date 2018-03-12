@@ -158,6 +158,34 @@ class Lint4JsonCompilationDbUnitTest(unittest.TestCase):
                              [r'C:\Qt\5.11.0\msvc2017_64\include',
                               r'C:\Qt\5.11.0\msvc2017_64\include\QtCore'])
 
+    def test_03d_cmake_ninja_windows_json_db(self):
+        self.__create_temp_json(
+            b'[{"directory": "D:/Code/build_cu", "command": '
+            b'"C:\\\\PROGRA~2\\\\MICROS~1.0\\\\VC\\\\bin\\\\amd64\\\\cl.exe '
+            b'/nologo /TP -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG '
+            b'-DQT_WIDGETS_LIB -IQtApplication '
+            b'-IC:\\\\Qt\\\\Qt5.9.2\\\\5.9.2\\\\msvc2015_64\\\\include '
+            b'-IC:\\\\Qt\\\\Qt5.9.2\\\\5.9.2\\\\msvc2015_64\\\\include'
+            b'\\\\QtWidgets /w34100 /w34189 /FoLogin\\\\src\\\\'
+            b'LoginDialog.cpp.obj /FdTARGET_COMPILE_PDB/FS -c D:\\\\src\\\\'
+            b'LoginDialog.cpp", "file": "D:\\\\src\\\\LoginDialog.cpp"}'
+            b']')
+        db = Lint4JsonCompilationDb(self._json_tested)
+        self.assertEqual(len(db.items), 1)
+        self.assertEqual(db.items[0].directory,
+                         'D:/Code/build_cu')
+        self.assertEqual(db.items[0].file,
+                         'D:\\src\\LoginDialog.cpp')
+        invocation = db.items[0].invocation
+        self.assertListEqual(invocation.defines,
+                             ['QT_CORE_LIB', 'QT_GUI_LIB',
+                              'QT_NO_DEBUG', 'QT_WIDGETS_LIB'])
+        self.assertListEqual(invocation.includes,
+                             ['QtApplication',
+                              'C:\\Qt\\Qt5.9.2\\5.9.2\\msvc2015_64\\include',
+                              'C:\\Qt\\Qt5.9.2\\5.9.2\\msvc2015_64\\include'
+                              '\\QtWidgets'])
+
     def test_04_ensure_BaseVisitor_never_matches(self):
         b = BaseVisitor()
 
