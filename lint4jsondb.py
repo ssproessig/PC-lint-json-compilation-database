@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+from multiprocessing.pool import ThreadPool
+
 import ijson
 
 
@@ -231,5 +233,8 @@ if __name__ == '__main__':
 
     lint = LintExecutor(args.lint_path, args.lint_binary, args.args)
 
-    for item in db.items:
+    def execute(item):
         lint.execute(item)
+
+    pool = ThreadPool()
+    pool.map(lambda s: execute(s), db.items)
