@@ -1,5 +1,11 @@
+from __future__ import print_function
 import os
 import subprocess
+import sys
+
+from multiprocessing import cpu_count
+from threading import Thread
+from queue import Queue     # works for Python 2 and 3 if "future" is installed
 
 import ijson
 
@@ -216,6 +222,43 @@ class LintExecutor:
         subprocess.call(arguments, cwd=item_to_process.directory)
 
 
+# using multiprocessing.dummy.ThreadPool does not allow to Ctrl+C running lint
+# solution - taken from: https://www.metachris.com/2016/04/python-threadpool/
+class Worker(Thread):
+    def __init__(self, tasks):
+        Thread.__init__(self)
+        self.tasks = tasks
+        self.daemon = True
+        self.start()
+
+    def run(self):
+        while True:
+            func, _args, kwargs = self.tasks.get()
+            try:
+                func(*_args, **kwargs)
+            except Exception as e:
+                print(e, file=sys.stderr)
+            finally:
+                self.tasks.task_done()
+
+
+class ThreadPool:
+    def __init__(self, num_threads):
+        self.tasks = Queue(num_threads)
+        for _ in range(num_threads):
+            Worker(self.tasks)
+
+    def add_task(self, func, *_args, **kwargs):
+        self.tasks.put((func, _args, kwargs))
+
+    def map(self, func, args_list):
+        for _args in args_list:
+            self.add_task(func, _args)
+
+    def wait_completion(self):
+        self.tasks.join()
+
+
 if __name__ == '__main__':
     import argparse
 
@@ -223,6 +266,7 @@ if __name__ == '__main__':
     parser.add_argument('--compilation-db', type=str, required=True)
     parser.add_argument('--lint-path', type=str, required=True)
     parser.add_argument('--lint-binary', type=str, required=True)
+    parser.add_argument('--jobs', type=int, default=cpu_count())
     parser.add_argument('args', nargs='*')
 
     args = parser.parse_args()
@@ -231,5 +275,9 @@ if __name__ == '__main__':
 
     lint = LintExecutor(args.lint_path, args.lint_binary, args.args)
 
-    for item in db.items:
-        lint.execute(item)
+    pool = ThreadPool(args.jobs)
+    try:
+        pool.map(lambda item: lint.execute(item), db.items)
+        pool.wait_completion()
+    except KeyboardInterrupt:
+        pass
