@@ -113,6 +113,7 @@ def tokenize_command(command):
         else:
             current_token += i
 
+    tokens.append(current_token)
     return tokens
 
 

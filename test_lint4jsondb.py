@@ -89,7 +89,7 @@ class Lint4JsonCompilationDbUnitTest(unittest.TestCase):
                          "F:/VS2017/working/mocs_compilation.cpp")
         invocation = db.items[0].invocation
         self.assertListEqual(invocation.defines,
-                             ['_DEBUG', '_MT', '_DLL', 'WIN32'])
+                             ['_DEBUG', '_MT', '_DLL', 'WIN32', '_WINDOWS'])
         self.assertListEqual(invocation.includes,
                              ['F:/VS2017/working/CMake',
                               'C:/Qt/5.10.0/msvc2017_64/include'])
