@@ -17,7 +17,7 @@ In order to integrate with existing build chains this tool can be used to execut
 Invoke `lint4jsondb.py` 
 
 ```
-W:\> lint4jsondb.py --compilation-db commands.json --lint-path D:\pclp --lint-binary pclp64.exe -- std.lnt
+W:\> lint4jsondb.py --compilation-db commands.json --lint-path D:\pclp --lint-binary pclp64.exe --jobs 6 -- std.lnt
 ```
 
 where 
@@ -25,6 +25,7 @@ where
 - `--compilation-db` points to your build system's JSON compilation database
 - `--lint-path` points to you PC-lint root path (that contains the binaries and the `lnt` directory)
 - `--lint-binary` names the PC-lint binary you want to execute (either `pclp32`, `pclp64` or `lint-nt`)
+- `--jobs` is the number of parallel PC-lint jobs to spawn (defaults to _number of CPU core_)
 - `--` and everything after it will be passed to the PC-lint binary; use it to point to your `std.lnt`
 
 

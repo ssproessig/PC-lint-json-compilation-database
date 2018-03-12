@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 
+from multiprocessing import cpu_count
 from threading import Thread
 from queue import Queue     # works for Python 2 and 3 if "future" is installed
 
@@ -265,6 +266,7 @@ if __name__ == '__main__':
     parser.add_argument('--compilation-db', type=str, required=True)
     parser.add_argument('--lint-path', type=str, required=True)
     parser.add_argument('--lint-binary', type=str, required=True)
+    parser.add_argument('--jobs', type=int, default=cpu_count())
     parser.add_argument('args', nargs='*')
 
     args = parser.parse_args()
@@ -273,6 +275,6 @@ if __name__ == '__main__':
 
     lint = LintExecutor(args.lint_path, args.lint_binary, args.args)
 
-    pool = ThreadPool(4)
+    pool = ThreadPool(args.jobs)
     pool.map(lambda item: lint.execute(item), db.items)
     pool.wait_completion()
