@@ -8,7 +8,8 @@ To check existing codebases with _PC-lint (plus)_ one has to:
     - creating a `lin.bat` or `lin.sh` that invokes _PC-lint (plus)_
     - create a `std.lnt` that includes `co.lnt` and `options.lnt`
     - create a `co.lnt` that sets up the compiler being used
-    - create an `options.lnt` that sets up the output format and suppressions to use
+    - create an `options.lnt` that sets up the output format and 
+    - create a `suppressions.lnt` for project-specific suppressions
 - invoke `lint` with all _include paths_ and _defines_ per _compilation-unit_.
 
 In order to integrate with existing build chains this tool can be used to execute _PC-lint_ using the build job's _JSON compilation database_.
