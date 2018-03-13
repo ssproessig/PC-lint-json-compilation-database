@@ -15,6 +15,11 @@ import ijson
 VERBOSE = False
 
 
+def print_verbose(msg):
+    if VERBOSE:
+        print(msg)
+
+
 class BaseVisitor:
     def __init__(self):
         self._invocation = None
@@ -233,6 +238,8 @@ class LintExecutor:
         if not os.path.exists(item_to_process.directory):
             os.makedirs(item_to_process.directory)
 
+        print_verbose("Executing: %s" % arguments)
+
         proc = subprocess.Popen(
             arguments, cwd=item_to_process.directory,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -245,6 +252,9 @@ class LintExecutor:
         arguments = self.args[:]
         arguments.append("-max_threads=%d" % jobs)
         arguments.append(file_to_pass)
+
+        print_verbose("Executing: %s" % arguments)
+
         subprocess.call(arguments)
 
 
