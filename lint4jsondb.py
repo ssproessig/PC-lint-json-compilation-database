@@ -327,6 +327,7 @@ class ExecuteLintForAllFilesInOneInvocation:
 
         def write_item():
             f.write("\n\n// for: %s \n" % item.file)
+            f.write("-save\n")
 
             includes = []
 
@@ -337,7 +338,7 @@ class ExecuteLintForAllFilesInOneInvocation:
 
             write_defines('d')
             f.write("%s\n" % item.file)
-            write_defines('u')
+            f.write("-restore\n")
 
         with self._tmp_file as f:
             for item in json_db.items:
