@@ -163,6 +163,7 @@ class Lint4JsonCompilationDbUnitTest(unittest.TestCase):
             b'[{"directory": "D:/Code/build_cu", "command": '
             b'"C:\\\\PROGRA~2\\\\MICROS~1.0\\\\VC\\\\bin\\\\amd64\\\\cl.exe '
             b'/nologo /TP -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG '
+            b'-D_PLUGIN_BASE_NAME=\\\\\\"name\\\\\\" '
             b'-DQT_WIDGETS_LIB -IQtApplication '
             b'-IC:\\\\Qt\\\\Qt5.9.2\\\\5.9.2\\\\msvc2015_64\\\\include '
             b'-IC:\\\\Qt\\\\Qt5.9.2\\\\5.9.2\\\\msvc2015_64\\\\include'
@@ -179,7 +180,8 @@ class Lint4JsonCompilationDbUnitTest(unittest.TestCase):
         invocation = db.items[0].invocation
         self.assertListEqual(invocation.defines,
                              ['QT_CORE_LIB', 'QT_GUI_LIB',
-                              'QT_NO_DEBUG', 'QT_WIDGETS_LIB'])
+                              'QT_NO_DEBUG', '_PLUGIN_BASE_NAME=\"name\"',
+                              'QT_WIDGETS_LIB'])
         self.assertListEqual(invocation.includes,
                              ['QtApplication',
                               'C:\\Qt\\Qt5.9.2\\5.9.2\\msvc2015_64\\include',

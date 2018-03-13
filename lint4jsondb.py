@@ -32,6 +32,9 @@ class BaseVisitor:
         self._invocation = Invocation()
 
     def end_invocation(self):
+        # when finishing an invocation- unescape all string parameters for lint
+        self._invocation.defines = [
+            d.replace('\\"', '"') for d in self._invocation.defines]
         return self._invocation
 
     def derive_invocation_from(self, param):
@@ -115,7 +118,11 @@ def tokenize_command(command):
 
     for i in command:
         if i == "\"":
+            if len(current_token) > 1 and current_token[-1] == "\\":
+                current_token += i
+
             in_string = not in_string
+
         elif i == " " and not in_string:
             if current_token != "":
                 tokens.append(current_token)
@@ -316,7 +323,7 @@ class ExecuteLintForAllFilesInOneInvocation:
     def _create_temporary_lint_config(self, json_db):
         def write_defines(prefix):
             for define in item.invocation.defines:
-                f.write("-%s\"%s\"\n" % (prefix, define))
+                f.write("-%s%s\n" % (prefix, define))
 
         def write_item():
             f.write("\n\n// for: %s \n" % item.file)
