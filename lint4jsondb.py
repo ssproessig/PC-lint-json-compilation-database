@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 
 from multiprocessing import cpu_count
 from threading import Lock, Thread
@@ -237,6 +238,12 @@ class LintExecutor:
         with Lock():
             print(stdout)
 
+    def execute_file(self, file_to_pass, jobs):
+        arguments = self.args[:]
+        arguments.append("-max_threads=%d" % jobs)
+        arguments.append(file_to_pass)
+        subprocess.call(arguments)
+
 
 # using multiprocessing.dummy.ThreadPool does not allow to Ctrl+C running lint
 # solution - taken from: https://www.metachris.com/2016/04/python-threadpool/
@@ -277,10 +284,10 @@ class ThreadPool:
 
 # noinspection PyMethodMayBeStatic
 class ExecuteLintForEachFile:
-    def execute_with(self, args, json_db):
-        lint = LintExecutor(args.lint_path, args.lint_binary, args.args)
+    def execute_with(self, arg, json_db):
+        lint = LintExecutor(arg.lint_path, arg.lint_binary, arg.args)
 
-        pool = ThreadPool(args.jobs)
+        pool = ThreadPool(arg.jobs)
         try:
             pool.map(lambda item: lint.execute(item), json_db.items)
             pool.wait_completion()
@@ -288,8 +295,44 @@ class ExecuteLintForEachFile:
             pass
 
 
+class ExecuteLintForAllFilesInOneInvocation:
+    def __init__(self):
+        self._tmp_file = tempfile.TemporaryFile(delete=False, suffix='.lnt')
+        self._last_invocation = None
+
+    def _create_temporary_lint_config(self, json_db):
+        def write_defines(prefix):
+            for define in item.invocation.defines:
+                f.write("-%s\"%s\"\n" % (prefix, define))
+
+        def write_item():
+            f.write("\n\n// for: %s \n" % item.file)
+
+            includes = []
+
+            for include in item.invocation.includes:
+                if include not in includes:
+                    includes.append(include)
+                    f.write("-i\"%s\"\n" % include)
+
+            write_defines('d')
+            f.write("%s\n" % item.file)
+            write_defines('u')
+
+        with self._tmp_file as f:
+            for item in json_db.items:
+                write_item()
+
+    def execute_with(self, arg, json_db):
+        self._create_temporary_lint_config(json_db)
+
+        lint = LintExecutor(arg.lint_path, arg.lint_binary, arg.args)
+        lint.execute_file(self._tmp_file.name, arg.jobs)
+
+
 EXEC_MODES = {
     "each": ExecuteLintForEachFile(),
+    "all": ExecuteLintForAllFilesInOneInvocation()
 }
 
 
