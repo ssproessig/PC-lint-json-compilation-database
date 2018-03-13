@@ -275,6 +275,24 @@ class ThreadPool:
         self.tasks.join()
 
 
+# noinspection PyMethodMayBeStatic
+class ExecuteLintForEachFile:
+    def execute_with(self, args, json_db):
+        lint = LintExecutor(args.lint_path, args.lint_binary, args.args)
+
+        pool = ThreadPool(args.jobs)
+        try:
+            pool.map(lambda item: lint.execute(item), json_db.items)
+            pool.wait_completion()
+        except KeyboardInterrupt:
+            pass
+
+
+EXEC_MODES = {
+    "each": ExecuteLintForEachFile(),
+}
+
+
 if __name__ == '__main__':
     import argparse
 
@@ -285,18 +303,17 @@ if __name__ == '__main__':
     parser.add_argument('--jobs', type=int, default=cpu_count())
     parser.add_argument('--include-only', action='append', default=[])
     parser.add_argument('--exclude-all', action='append', default=[])
+    parser.add_argument('--exec-mode', type=str, default='each')
     parser.add_argument('args', nargs='*')
 
     args = parser.parse_args()
 
+    if args.exec_mode not in EXEC_MODES:
+        print("You must select a supported mode (%s)!" % ",".join(EXEC_MODES),
+              file=sys.stderr)
+        sys.exit(1)
+
     db = Lint4JsonCompilationDb(args.compilation_db,
                                 args.include_only, args.exclude_all)
 
-    lint = LintExecutor(args.lint_path, args.lint_binary, args.args)
-
-    pool = ThreadPool(args.jobs)
-    try:
-        pool.map(lambda item: lint.execute(item), db.items)
-        pool.wait_completion()
-    except KeyboardInterrupt:
-        pass
+    EXEC_MODES[args.exec_mode].execute_with(args, db)
