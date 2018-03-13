@@ -12,6 +12,9 @@ from queue import Queue     # works for Python 2 and 3 if "future" is installed
 import ijson
 
 
+VERBOSE = False
+
+
 class BaseVisitor:
     def __init__(self):
         self._invocation = None
@@ -347,9 +350,12 @@ if __name__ == '__main__':
     parser.add_argument('--include-only', action='append', default=[])
     parser.add_argument('--exclude-all', action='append', default=[])
     parser.add_argument('--exec-mode', type=str, default='each')
+    parser.add_argument('--verbose', action='store_true', default=False)
     parser.add_argument('args', nargs='*')
 
     args = parser.parse_args()
+
+    VERBOSE = args.verbose
 
     if args.exec_mode not in EXEC_MODES:
         print("You must select a supported mode (%s)!" % ",".join(EXEC_MODES),
