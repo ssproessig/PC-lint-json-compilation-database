@@ -367,7 +367,7 @@ if __name__ == '__main__':
     parser.add_argument('--jobs', type=int, default=cpu_count())
     parser.add_argument('--include-only', action='append', default=[])
     parser.add_argument('--exclude-all', action='append', default=[])
-    parser.add_argument('--exec-mode', type=str, default='each')
+    parser.add_argument('--exec-mode', type=str, default='all')
     parser.add_argument('--verbose', action='store_true', default=False)
     parser.add_argument('args', nargs='*')
 
