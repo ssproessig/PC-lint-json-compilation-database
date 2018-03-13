@@ -34,6 +34,14 @@ Optionally you can control which files of the overall JSON compilation database 
 - `--exclude-all <regexp>` will additionally exclude all those files whose full file-path matches `<regexp>`
 
 
+Additionally you can control __how__ PC-lint is invoked via `--exec-mode`
+
+- either once _per file_ using `each`
+- or once _per JSON compilation database_ using `all` 
+
+It is recommended to use `all` (the default) as this allows PC-lint to further track member usage inter-dependencies.
+
+
 ## Further notes
 - might work with _FlexeLint_ as well (I don't have one to test with)
 
