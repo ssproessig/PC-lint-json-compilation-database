@@ -3,12 +3,21 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 
 from multiprocessing import cpu_count
 from threading import Lock, Thread
 from queue import Queue     # works for Python 2 and 3 if "future" is installed
 
 import ijson
+
+
+VERBOSE = False
+
+
+def print_verbose(msg):
+    if VERBOSE:
+        print(msg)
 
 
 class BaseVisitor:
@@ -23,6 +32,9 @@ class BaseVisitor:
         self._invocation = Invocation()
 
     def end_invocation(self):
+        # when finishing an invocation- unescape all string parameters for lint
+        self._invocation.defines = [
+            d.replace('\\"', '"') for d in self._invocation.defines]
         return self._invocation
 
     def derive_invocation_from(self, param):
@@ -106,7 +118,11 @@ def tokenize_command(command):
 
     for i in command:
         if i == "\"":
+            if len(current_token) > 1 and current_token[-1] == "\\":
+                current_token += i
+
             in_string = not in_string
+
         elif i == " " and not in_string:
             if current_token != "":
                 tokens.append(current_token)
@@ -229,6 +245,8 @@ class LintExecutor:
         if not os.path.exists(item_to_process.directory):
             os.makedirs(item_to_process.directory)
 
+        print_verbose("Executing: %s" % arguments)
+
         proc = subprocess.Popen(
             arguments, cwd=item_to_process.directory,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -236,6 +254,15 @@ class LintExecutor:
 
         with Lock():
             print(stdout)
+
+    def execute_file(self, file_to_pass, jobs):
+        arguments = self.args[:]
+        arguments.append("-max_threads=%d" % jobs)
+        arguments.append(file_to_pass)
+
+        print_verbose("Executing: %s" % arguments)
+
+        subprocess.call(arguments)
 
 
 # using multiprocessing.dummy.ThreadPool does not allow to Ctrl+C running lint
@@ -275,6 +302,61 @@ class ThreadPool:
         self.tasks.join()
 
 
+# noinspection PyMethodMayBeStatic
+class ExecuteLintForEachFile:
+    def execute_with(self, arg, json_db):
+        lint = LintExecutor(arg.lint_path, arg.lint_binary, arg.args)
+
+        pool = ThreadPool(arg.jobs)
+        try:
+            pool.map(lambda item: lint.execute(item), json_db.items)
+            pool.wait_completion()
+        except KeyboardInterrupt:
+            pass
+
+
+class ExecuteLintForAllFilesInOneInvocation:
+    def __init__(self):
+        self._tmp_file = tempfile.TemporaryFile(delete=False, suffix='.lnt')
+        self._last_invocation = None
+
+    def _create_temporary_lint_config(self, json_db):
+        def write_defines(prefix):
+            for define in item.invocation.defines:
+                f.write("-%s%s\n" % (prefix, define))
+
+        def write_item():
+            f.write("\n\n// for: %s \n" % item.file)
+            f.write("-save\n")
+
+            includes = []
+
+            for include in item.invocation.includes:
+                if include not in includes:
+                    includes.append(include)
+                    f.write("-i\"%s\"\n" % include)
+
+            write_defines('d')
+            f.write("%s\n" % item.file)
+            f.write("-restore\n")
+
+        with self._tmp_file as f:
+            for item in json_db.items:
+                write_item()
+
+    def execute_with(self, arg, json_db):
+        self._create_temporary_lint_config(json_db)
+
+        lint = LintExecutor(arg.lint_path, arg.lint_binary, arg.args)
+        lint.execute_file(self._tmp_file.name, arg.jobs)
+
+
+EXEC_MODES = {
+    "each": ExecuteLintForEachFile(),
+    "all": ExecuteLintForAllFilesInOneInvocation()
+}
+
+
 if __name__ == '__main__':
     import argparse
 
@@ -285,18 +367,20 @@ if __name__ == '__main__':
     parser.add_argument('--jobs', type=int, default=cpu_count())
     parser.add_argument('--include-only', action='append', default=[])
     parser.add_argument('--exclude-all', action='append', default=[])
+    parser.add_argument('--exec-mode', type=str, default='all')
+    parser.add_argument('--verbose', action='store_true', default=False)
     parser.add_argument('args', nargs='*')
 
     args = parser.parse_args()
 
+    VERBOSE = args.verbose
+
+    if args.exec_mode not in EXEC_MODES:
+        print("You must select a supported mode (%s)!" % ",".join(EXEC_MODES),
+              file=sys.stderr)
+        sys.exit(1)
+
     db = Lint4JsonCompilationDb(args.compilation_db,
                                 args.include_only, args.exclude_all)
 
-    lint = LintExecutor(args.lint_path, args.lint_binary, args.args)
-
-    pool = ThreadPool(args.jobs)
-    try:
-        pool.map(lambda item: lint.execute(item), db.items)
-        pool.wait_completion()
-    except KeyboardInterrupt:
-        pass
+    EXEC_MODES[args.exec_mode].execute_with(args, db)

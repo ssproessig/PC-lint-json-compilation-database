@@ -8,7 +8,8 @@ To check existing codebases with _PC-lint (plus)_ one has to:
     - creating a `lin.bat` or `lin.sh` that invokes _PC-lint (plus)_
     - create a `std.lnt` that includes `co.lnt` and `options.lnt`
     - create a `co.lnt` that sets up the compiler being used
-    - create an `options.lnt` that sets up the output format and suppressions to use
+    - create an `options.lnt` that sets up the output format and 
+    - create a `suppressions.lnt` for project-specific suppressions
 - invoke `lint` with all _include paths_ and _defines_ per _compilation-unit_.
 
 In order to integrate with existing build chains this tool can be used to execute _PC-lint_ using the build job's _JSON compilation database_.
@@ -32,6 +33,14 @@ Optionally you can control which files of the overall JSON compilation database 
 
 - `--include-only <regexp>` will include only those files whose full file-path matches `<regexp>`
 - `--exclude-all <regexp>` will additionally exclude all those files whose full file-path matches `<regexp>`
+
+
+Additionally you can control __how__ PC-lint is invoked via `--exec-mode`
+
+- either once _per file_ using `each`
+- or once _per JSON compilation database_ using `all` 
+
+It is recommended to use `all` (the default) as this allows PC-lint to further track member usage inter-dependencies.
 
 
 ## Further notes
