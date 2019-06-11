@@ -317,7 +317,7 @@ class ExecuteLintForEachFile:
 
 class ExecuteLintForAllFilesInOneInvocation:
     def __init__(self):
-        self._tmp_file = tempfile.TemporaryFile(delete=False, suffix='.lnt')
+        self._tmp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.lnt')
         self._last_invocation = None
 
     def _create_temporary_lint_config(self, json_db):
