@@ -326,6 +326,8 @@ class ExecuteLintForAllFilesInOneInvocation:
                 f.write("-%s%s\n" % (prefix, define))
 
         def write_item():
+            item.file = os.path.normpath(
+                os.path.join(item.directory, item.file))
             f.write("\n\n// for: %s \n" % item.file)
             f.write("-save\n")
 
@@ -334,6 +336,8 @@ class ExecuteLintForAllFilesInOneInvocation:
             for include in item.invocation.includes:
                 if include not in includes:
                     includes.append(include)
+                    include = os.path.normpath(
+                        os.path.join(item.directory, include))
                     f.write("-i\"%s\"\n" % include)
 
             write_defines('d')
