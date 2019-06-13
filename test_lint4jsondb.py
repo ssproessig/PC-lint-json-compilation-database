@@ -19,7 +19,7 @@ class Lint4JsonCompilationDbUnitTest(unittest.TestCase):
             os.remove(self._json_tested)
 
     def __create_temp_json(self, content):
-        with tempfile.TemporaryFile('wb', delete=False) as f:
+        with tempfile.NamedTemporaryFile('wb', delete=False) as f:
             self._json_tested = f.name
             f.write(content)
 
@@ -264,7 +264,8 @@ class LintExecutorUnitTest(unittest.TestCase):
                               'stderr': -2, 'stdout': -1})
 
         # ensure lint is called
-        self.assertEqual(args.pop(0), os.path.join("<lint-path>", "<lint-exe>"))
+        self.assertEqual(args.pop(0), os.path.join(
+            "<lint-path>", "<lint-exe>"))
         # ensure lint suppresses the banner line
         self.assertEqual(args.pop(0), '-b')
         # ensure lint's "lnt" directory was added
@@ -280,3 +281,7 @@ class LintExecutorUnitTest(unittest.TestCase):
         self.assertEqual(args.pop(0), '-i"i2"')
         # ensure that the file to check is passed finally
         self.assertEqual(args.pop(0), "<file>")
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -183,6 +183,12 @@ class JsonDbEntry:
 
                 continue
 
+        # apply the directory to relative paths if needed
+        self.file = os.path.normpath(os.path.join(self.directory, self.file))
+        self.invocation.includes = [
+            os.path.normpath(os.path.join(self.directory, inc))
+            for inc in self.invocation.includes]
+
 
 class Lint4JsonCompilationDb:
     def __init__(self, compilation_db, include_only=set(), exclude_all=set()):
@@ -317,7 +323,8 @@ class ExecuteLintForEachFile:
 
 class ExecuteLintForAllFilesInOneInvocation:
     def __init__(self):
-        self._tmp_file = tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.lnt')
+        self._tmp_file = tempfile.NamedTemporaryFile(
+            mode='w+', delete=False, suffix='.lnt')
         self._last_invocation = None
 
     def _create_temporary_lint_config(self, json_db):
