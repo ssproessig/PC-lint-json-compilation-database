@@ -19,8 +19,8 @@ class Lint4JsonCompilationDbUnitTest(unittest.TestCase):
             os.remove(self._json_tested)
 
     def __create_temp_json(self, content):
-        with tempfile.TemporaryFile('wb', delete=False) as f:
-            self._json_tested = f.name
+        fd, self._json_tested = tempfile.mkstemp()
+        with open(self._json_tested, 'wb') as f:
             f.write(content)
 
     def test_00_coverage_for_repr(self):
