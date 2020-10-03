@@ -190,7 +190,8 @@ class Lint4JsonCompilationDb:
     def __init__(self, compilation_db, include_only=set(), exclude_all=set()):
         self._current_item = None
         self.items = []
-
+        compilation_db = os.path.abspath(os.path.expanduser(compilation_db))
+        self.base_path = os.path.dirname(compilation_db)
         self.read_json_db(compilation_db)
 
         for regexp in include_only:
@@ -334,6 +335,8 @@ class ExecuteLintForAllFilesInOneInvocation:
             includes = []
 
             for include in item.invocation.includes:
+                if not os.path.isabs(include):
+                    include = os.path.join(db.base_path, include)
                 if include not in includes:
                     includes.append(include)
                     f.write("-i\"%s\"\n" % include)
