@@ -90,8 +90,10 @@ class MSVCCompatibleVisitor(BaseVisitor):
         BaseVisitor.__init__(self)
 
     def matches(self, command):
-        _, executable = os.path.split(command)
-        return executable in self.COMPILER
+        for compiler in self.COMPILER:
+            if command.endswith(compiler):
+                return True
+        return False
 
     def derive_invocation_from(self, param):
         if param.startswith('/I') or param.startswith('-I'):
