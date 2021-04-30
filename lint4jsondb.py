@@ -250,6 +250,8 @@ class LintExecutor:
         arguments = self.args[:]
         arguments.extend('-d' + d for d in inv.defines)
         arguments.extend('-i"%s"' % i for i in inv.includes)
+        if item_to_process.treat_as_library:
+            arguments.append('-library')
         arguments.append(item_to_process.file)
 
         if not os.path.exists(item_to_process.directory):
@@ -349,6 +351,8 @@ class ExecuteLintForAllFilesInOneInvocation:
                     f.write("-i\"%s\"\n" % include)
 
             write_defines('d')
+            if item.treat_as_library:
+                f.write("-library\n")
             f.write("%s\n" % item.file)
             f.write("-restore\n")
 
