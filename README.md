@@ -34,8 +34,11 @@ Optionally you can control which files of the overall JSON compilation database 
 - `--include-only <regexp>` will include only those files whose full file-path matches `<regexp>`
 - `--exclude-all <regexp>` will additionally exclude all those files whose full file-path matches `<regexp>`
 
+Also, you can control if a file is to be treated as `-library` by PC-lint using
 
-Additionally you can control __how__ PC-lint is invoked via `--exec-mode`
+- `--treat-as-library <regexp>` and e.g. pass the `build` directory where Qt `moc` generated files are stored
+
+Additionally, you can control __how__ PC-lint is invoked via `--exec-mode`
 
 - either once _per file_ using `each`
 - or once _per JSON compilation database_ using `all` 

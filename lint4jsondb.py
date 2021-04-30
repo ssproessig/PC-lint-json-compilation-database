@@ -141,6 +141,7 @@ class JsonDbEntry:
         self.directory = None
         self.command = None
         self.file = None
+        self.treat_as_library = False
         self.arguments = []
 
         self._tokens = []
@@ -187,7 +188,7 @@ class JsonDbEntry:
 
 
 class Lint4JsonCompilationDb:
-    def __init__(self, compilation_db, include_only=set(), exclude_all=set()):
+    def __init__(self, compilation_db, include_only=set(), exclude_all=set(), treat_as_library=set()):
         self._current_item = None
         self.items = []
         compilation_db = os.path.abspath(os.path.expanduser(compilation_db))
@@ -201,6 +202,12 @@ class Lint4JsonCompilationDb:
         for regexp in exclude_all:
             r = re.compile(regexp)
             self.items[:] = [i for i in self.items if not r.match(i.file)]
+
+        for regexp in treat_as_library:
+            r = re.compile(regexp)
+            for index, item in enumerate(self.items):
+                item.treat_as_library = bool(r.match(item.file))
+                self.items[index] = item
 
     def read_json_db(self, fn):
         with open(fn, 'r') as f:
@@ -372,6 +379,7 @@ if __name__ == '__main__':
     parser.add_argument('--jobs', type=int, default=cpu_count())
     parser.add_argument('--include-only', action='append', default=[])
     parser.add_argument('--exclude-all', action='append', default=[])
+    parser.add_argument('--treat-as-library', action='append', default=[])
     parser.add_argument('--exec-mode', type=str, default='all')
     parser.add_argument('--verbose', action='store_true', default=False)
     parser.add_argument('args', nargs='*')
@@ -386,6 +394,6 @@ if __name__ == '__main__':
         sys.exit(1)
 
     db = Lint4JsonCompilationDb(args.compilation_db,
-                                args.include_only, args.exclude_all)
+                                args.include_only, args.exclude_all, args.treat_as_library)
 
     EXEC_MODES[args.exec_mode].execute_with(args, db)

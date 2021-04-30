@@ -235,6 +235,22 @@ class Lint4JsonCompilationDbUnitTest(unittest.TestCase):
         self.assertEqual(db.items[0].file, "a2.cpp")
         self.assertEqual(db.items[1].file, "b2.cpp")
 
+    def test_06_treat_as_library_source(self):
+        self.__create_temp_json(
+            b'[{"directory": "F:/2019/apic-ninja","command": "C:\\PROGRA~2\\MICROS~3\\2019\\PROFES~1\\VC\\Tools\\MSVC\\'
+            b'1428~1.299\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -DQT_CORE_LIB -DQT_NETWORK_LIB -DQT_WEBSOCKETS_LIB '
+            b'-DSHARED_LIBRARY=1 -DUNICODE -D_UNICODE -DCMAKE_INTDIR=\\\"Debug\\\" '
+            b'-Isources\\xxx_autogen\\include_Debug -IG:\\Code\\xxxx\\sources '
+            b'-IC:\\_\\Qt\\5.15.3\\msvc2019_64\\include\\QtWebSockets /DWIN32 /D_WINDOWS /GR /EHsc /Zi /Ob0 /Od /RTC1 '
+            b'-MDd /W4 /experimental:external /external:anglebrackets /external:W0 /MP -std:c++17 '
+            b'-JMC /Fosources\\CMakeFiles\\xxx.dir\\Debug\\xxx_autogen\\mocs_compilation_Debug.cpp.obj '
+            b'/FdTARGET_COMPILE_PDB /FS -c F:\\2019\\apic-ninja\\sources\\xxx_autogen\\mocs_compilation_Debug.cpp",'
+            b'"file": "F:/2019/apic-ninja/sources/xxx_autogen/mocs_compilation_Debug.cpp"}]'
+            )
+        db = Lint4JsonCompilationDb(self._json_tested, [], [], ['^F:/2019/apic-ninja.*'])
+        self.assertEqual(len(db.items), 1)
+        self.assertEqual(db.items[0].treat_as_library, True)
+
 
 class LintExecutorUnitTest(unittest.TestCase):
 
