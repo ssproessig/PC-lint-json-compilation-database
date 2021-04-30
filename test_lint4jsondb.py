@@ -15,8 +15,11 @@ class Lint4JsonCompilationDbUnitTest(unittest.TestCase):
         self._json_tested = None
 
     def tearDown(self):
-        if self._json_tested is not None and os.path.exists(self._json_tested):
-            os.remove(self._json_tested)
+        if self._json_tested is not None:
+            try:
+                os.remove(self._json_tested)
+            except OSError:
+                pass
 
     def __create_temp_json(self, content):
         fd, self._json_tested = tempfile.mkstemp()
