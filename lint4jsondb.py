@@ -101,6 +101,9 @@ class MSVCCompatibleVisitor(BaseVisitor):
             self._store_next_param_in = self._invocation.includes
         elif param.startswith('/D') or param.startswith('-D'):
             self._store_next_param_in = self._invocation.defines
+        elif param.startswith('-external:I'):
+            self._store_next_param_in = self._invocation.includes
+            val = param[11:]
 
         if self._store_next_param_in is not None:
             self._store_next_param_in.append(val)
