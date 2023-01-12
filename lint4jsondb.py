@@ -96,13 +96,14 @@ class MSVCCompatibleVisitor(BaseVisitor):
         return False
 
     def derive_invocation_from(self, param):
+        val = param[2:]
         if param.startswith('/I') or param.startswith('-I'):
             self._store_next_param_in = self._invocation.includes
         elif param.startswith('/D') or param.startswith('-D'):
             self._store_next_param_in = self._invocation.defines
 
         if self._store_next_param_in is not None:
-            self._store_next_param_in.append(param[2:])
+            self._store_next_param_in.append(val)
             self._store_next_param_in = None
 
 
