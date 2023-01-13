@@ -1,16 +1,16 @@
-from __future__ import print_function
+import dataclasses
+import json
 import os
 import re
 import subprocess
 import sys
 import tempfile
-
 from multiprocessing import cpu_count
+from pathlib import Path
+from queue import Queue
 from threading import Lock, Thread
-from queue import Queue     # works for Python 2 and 3 if "future" is installed
 
 import ijson
-
 
 VERBOSE = False
 
@@ -239,6 +239,85 @@ class Lint4JsonCompilationDb:
             self._current_item.store(parts[1], value)
 
 
+@dataclasses.dataclass
+class Finding:
+    file: str
+    line: int
+    col: int
+    level: str
+    errno: int
+    msg: str
+
+    SARIF_LEVEL = {
+        "error": "error",
+        "warning": "warning",
+        "info": "note",
+        "note": "note",
+    }
+
+    def get_result(self):
+        return {
+            "ruleId": f"PCLP-{self.errno}",
+            "level": self.SARIF_LEVEL.get(self.level, "none"),
+            "message": {
+                "text": self.msg
+            },
+            "locations": [
+                {
+                    "physicalLocation": {
+                        "artifactLocation": {
+                            "uri": Path(self.file).as_uri()
+                        },
+                        "region": {
+                            "startLine": self.line,
+                            "startColumn": self.col
+                        }
+                    }
+                }
+            ]
+        }
+
+
+class SarifProcessor:
+    RE = re.compile("""(?P<file>.*)\[(?P<l>\d+),(?P<c>\d+)\]\s+(?P<msglvl>[a-z]+)\s+(?P<msgno>\d+):\s+(?P<msg>.*)""")
+
+    def __init__(self):
+        self.findings: list[Finding] = []
+
+    def _add_finding(self, m):
+        self.findings.append(Finding(
+            file=m.group("file"),
+            line=m.group("l"), col=m.group("c"),
+            level=m.group("msglvl"), errno=m.group("msgno"), msg=m.group("msg")
+        ))
+
+    def write_to(self, file_name):
+        with open(file_name, "w") as f:
+            f.write(self._generate_sarif())
+
+    def _generate_sarif(self):
+        results = [finding.get_result() for finding in self.findings]
+        model = {
+            "version": "2.1.0",
+            "runs": [
+                {
+                    "tool": {
+                        "driver": {
+                            "name": "lint4jsondb / PC-lint plus",
+                            "semanticVersion": "1.0.0"
+                        }
+                    },
+                    "results": results
+                }
+            ]
+        }
+        return json.dumps(model, indent=4)
+
+    def process(self, line):
+        if m := self.RE.match(line):
+            self._add_finding(m)
+
+
 class LintExecutor:
     def __init__(self, lint_path, lint_binary, other_args):
         self.args = [
@@ -271,14 +350,22 @@ class LintExecutor:
         with Lock():
             print(stdout)
 
-    def execute_file(self, file_to_pass, jobs):
+    def execute_file(self, file_to_pass, jobs, sarif_report):
+        sp = SarifProcessor()
         arguments = self.args[:]
         arguments.append("-max_threads=%d" % jobs)
         arguments.append(file_to_pass)
 
         print_verbose("Executing: %s" % "  ".join(arguments))
 
-        subprocess.call(arguments)
+        proc = subprocess.Popen(arguments, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
+        while proc.poll() is None:
+            line = proc.stdout.readline()
+            sys.stdout.write(line)
+            sp.process(line)
+
+        if sarif_report:
+            sp.write_to(sarif_report)
 
 
 # using multiprocessing.dummy.ThreadPool does not allow to Ctrl+C running lint
@@ -321,6 +408,9 @@ class ThreadPool:
 # noinspection PyMethodMayBeStatic
 class ExecuteLintForEachFile:
     def execute_with(self, arg, json_db):
+        if arg.sarif_report:
+            raise NotImplementedError("SARIF reports are not supported for single file execution")
+
         lint = LintExecutor(arg.lint_path, arg.lint_binary, arg.args)
 
         pool = ThreadPool(arg.jobs)
@@ -368,7 +458,7 @@ class ExecuteLintForAllFilesInOneInvocation:
         self._create_temporary_lint_config(json_db)
 
         lint = LintExecutor(arg.lint_path, arg.lint_binary, arg.args)
-        lint.execute_file(self._tmp_file.name, arg.jobs)
+        lint.execute_file(self._tmp_file.name, arg.jobs, arg.sarif_report)
 
 
 EXEC_MODES = {
@@ -376,12 +466,12 @@ EXEC_MODES = {
     "all": ExecuteLintForAllFilesInOneInvocation()
 }
 
-
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser('lint 4 JSON compilation database')
     parser.add_argument('--compilation-db', type=str, required=True)
+    parser.add_argument('--sarif-report', type=str, default=None)
     parser.add_argument('--lint-path', type=str, required=True)
     parser.add_argument('--lint-binary', type=str, required=True)
     parser.add_argument('--jobs', type=int, default=cpu_count())
@@ -400,6 +490,9 @@ if __name__ == '__main__':
         print("You must select a supported mode (%s)!" % ",".join(EXEC_MODES),
               file=sys.stderr)
         sys.exit(1)
+
+    if args.sarif_report:
+        print(f"Writing SARIF report to {args.sarif_report}")
 
     db = Lint4JsonCompilationDb(args.compilation_db,
                                 args.include_only, args.exclude_all, args.treat_as_library)
